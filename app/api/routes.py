@@ -1,13 +1,14 @@
 from fastapi import APIRouter, HTTPException, Query
-from typing import Literal
+from typing import Literal, Optional
 from app.services.scheduler import get_interval, get_status
+from app.services.api_logger import api_logger
 from app.core.config import settings
 
 router = APIRouter()
 
 @router.get("/volatility")
 async def volatility(
-    interval: Literal[tuple(settings.INTERVALS)] = Query("1h"),
+    interval: str = Query("1h"),
     sort_by: str = Query("ma21"),
     descending: bool = Query(True),
     limit: int = Query(100, le=1000)
@@ -30,6 +31,31 @@ async def volatility(
 async def status():
     """Get the current status of the backend data processing"""
     return await get_status()
+
+@router.get("/api-logs")
+async def get_api_logs(
+    limit: int = Query(100, le=1000),
+    symbol_filter: Optional[str] = Query(None)
+):
+    """Get detailed API call logs"""
+    logs = api_logger.get_logs(limit=limit, symbol_filter=symbol_filter)
+    stats = api_logger.get_stats()
+    return {
+        "logs": logs,
+        "stats": stats,
+        "total_count": len(logs)
+    }
+
+@router.get("/api-stats")
+async def get_api_stats():
+    """Get API call statistics"""
+    return api_logger.get_stats()
+
+@router.post("/api-logs/clear")
+async def clear_api_logs():
+    """Clear all API logs and reset statistics"""
+    api_logger.clear_logs()
+    return {"message": "API logs cleared successfully"}
 
 @router.get("/debug/{interval}")
 async def debug_data(interval: str):

@@ -93,8 +93,7 @@ export default function StatusPanel() {
           </div>
         </div>
       )}
-      
-      {Object.keys(status.intervals || {}).length > 0 && (
+        {Object.keys(status.intervals || {}).length > 0 && (
         <div className="mt-2 text-sm">
           <strong>Loaded Intervals:</strong>
           <div className="grid grid-cols-5 gap-1">
@@ -103,6 +102,29 @@ export default function StatusPanel() {
                 {interval}: {count}
               </div>
             ))}
+          </div>
+        </div>
+      )}
+      
+      {/* API Statistics */}
+      {status.api_stats && (
+        <div className="mt-2 text-sm">
+          <strong>API Stats:</strong>
+          <div className="grid grid-cols-4 gap-2 mt-1">
+            <div className="text-xs">
+              <span className="text-blue-600">{status.api_stats.total_calls || 0}</span> total
+            </div>
+            <div className="text-xs">
+              <span className="text-green-600">{status.api_stats.successful_calls || 0}</span> success
+            </div>
+            <div className="text-xs">
+              <span className="text-red-600">{status.api_stats.failed_calls || 0}</span> failed
+            </div>
+            <div className="text-xs">
+              <span className="text-yellow-600">
+                {status.api_stats.avg_response_time ? `${status.api_stats.avg_response_time.toFixed(0)}ms` : '0ms'}
+              </span> avg
+            </div>
           </div>
         </div>
       )}

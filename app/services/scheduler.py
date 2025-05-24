@@ -6,6 +6,7 @@ from datetime import datetime
 from app.core.config import settings
 from app.services.binance_client import fetch_symbols, close
 from app.services.volatility import volatility_for_symbol
+from app.services.api_logger import api_logger
 
 _cache: dict[str, list[dict]] = defaultdict(list)
 _initialized = False
@@ -120,7 +121,10 @@ async def get_interval(interval: str) -> list[dict]:
     return _cache.get(interval, [])
 
 async def get_status():
-    return _status
+    status = _status.copy()
+    # Add API call statistics
+    status["api_stats"] = api_logger.get_stats()
+    return status
 
 async def on_shutdown():
     await close()
