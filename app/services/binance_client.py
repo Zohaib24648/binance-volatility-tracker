@@ -25,7 +25,8 @@ async def fetch_symbols() -> list[str]:
         api_logger.complete_call(
             call_context,
             response_status=response.status_code,
-            response_data={"symbol_count": len(data.get("symbols", [])), "status": "success"}
+            response_data=data,
+            response_headers=dict(response.headers)
         )
         
         symbols = [s["symbol"]
@@ -55,7 +56,8 @@ async def fetch_klines(symbol: str, interval: str, limit: int):
         api_logger.complete_call(
             call_context,
             response_status=response.status_code,
-            response_data={"candle_count": len(data), "symbol": symbol, "interval": interval}
+            response_data=data,
+            response_headers=dict(response.headers)
         )
         
         return data

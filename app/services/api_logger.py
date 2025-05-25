@@ -14,8 +14,11 @@ class APICall:
     url: str
     params: Optional[Dict[str, Any]]
     headers: Optional[Dict[str, str]]
+    request_body: Optional[str]  # Complete request body
     request_size: int
     response_status: Optional[int]
+    response_headers: Optional[Dict[str, str]]  # Response headers
+    response_body: Optional[str]  # Complete response body
     response_size: Optional[int]
     response_time_ms: float
     success: bool
@@ -38,7 +41,8 @@ class APILogger:
         }
         
     def start_call(self, method: str, url: str, params: Optional[Dict] = None, 
-                   headers: Optional[Dict] = None, symbol: Optional[str] = None) -> Dict[str, Any]:
+                   headers: Optional[Dict] = None, symbol: Optional[str] = None,
+                   request_body: Optional[str] = None) -> Dict[str, Any]:
         """Start tracking an API call. Returns call context for completion."""
         return {
             "start_time": time.time(),
@@ -46,28 +50,32 @@ class APILogger:
             "url": url,
             "params": params or {},
             "headers": headers or {},
+            "request_body": request_body,
             "symbol": symbol,
-            "request_size": len(json.dumps(params or {}))
+            "request_size": len(request_body or json.dumps(params or {}))
         }
     
     def complete_call(self, call_context: Dict[str, Any], response_status: Optional[int] = None,
-                     response_data: Any = None, error: Optional[Exception] = None):
+                     response_data: Any = None, response_headers: Optional[Dict] = None,
+                     error: Optional[Exception] = None):
         """Complete and log an API call"""
         end_time = time.time()
         response_time_ms = (end_time - call_context["start_time"]) * 1000
         
-        # Prepare response preview
+        # Prepare response body and preview
+        response_body = None
         response_preview = None
         response_size = 0
+        
         if response_data is not None:
             if isinstance(response_data, (dict, list)):
-                response_str = json.dumps(response_data)
-                response_size = len(response_str)
-                response_preview = response_str[:500] + ("..." if len(response_str) > 500 else "")
+                response_body = json.dumps(response_data, indent=2)
+                response_size = len(response_body)
+                response_preview = response_body[:500] + ("..." if len(response_body) > 500 else "")
             else:
-                response_str = str(response_data)
-                response_size = len(response_str)
-                response_preview = response_str[:500] + ("..." if len(response_str) > 500 else "")
+                response_body = str(response_data)
+                response_size = len(response_body)
+                response_preview = response_body[:500] + ("..." if len(response_body) > 500 else "")
         
         # Create API call record
         api_call = APICall(
@@ -76,8 +84,11 @@ class APILogger:
             url=call_context["url"],
             params=call_context["params"],
             headers=call_context["headers"],
+            request_body=call_context["request_body"],
             request_size=call_context["request_size"],
             response_status=response_status,
+            response_headers=response_headers or {},
+            response_body=response_body,
             response_size=response_size,
             response_time_ms=response_time_ms,
             success=error is None and (response_status is None or 200 <= response_status < 300),

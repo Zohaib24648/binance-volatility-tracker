@@ -23,5 +23,5 @@ async def volatility_for_symbol(symbol: str, interval: str) -> dict:
     result = {"symbol": symbol, "interval": interval}
     for w in settings.MA_WINDOWS:
         if len(df) >= w:
-            result[f"ma{w}"] = df["amplitude"].tail(w).mean()
+            result[f"ma{w}"] = str(df["amplitude"].tail(w).mean())
     return result
