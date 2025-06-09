@@ -19,13 +19,16 @@ async def volatility(
     if not data:
         return {"interval": interval, "rows": [], "status": "initializing"}
 
-    # Sort + clamp
-    data = sorted(
-        [d for d in data if sort_by in d],
-        key=lambda x: x[sort_by],
-        reverse=descending
-    )[:limit]
-    return {"interval": interval, "rows": data}
+    # Sort + clamp with proper handling for missing values
+    def safe_sort_key(item):
+        # Return -inf or inf as fallbacks for missing or None values based on sort direction
+        # This ensures items without the sort_by key appear at the end of the list
+        if sort_by not in item or item[sort_by] is None:
+            return float('-inf') if descending else float('inf')
+        return float(item[sort_by])  # Ensure numerical sorting
+        
+    sorted_data = sorted(data, key=safe_sort_key, reverse=descending)[:limit]
+    return {"interval": interval, "rows": sorted_data}
 
 @router.get("/status")
 async def status():

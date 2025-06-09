@@ -78,8 +78,10 @@ export default function VolatilityTable({ interval = "1h" }) {
         header: `MA${w}`,
         cell: ({ getValue }) => {
           const value = getValue();
-          return value ? (value * 100).toFixed(2) + '%' : "-";
+          // Handle both string and number formats, ensuring null values display as "-"
+          return value !== null && value !== undefined ? (parseFloat(value) * 100).toFixed(2) + '%' : "-";
         },
+        sortingFn: 'basic',  // Use basic sorting for numeric values
       })),
     ],
     []
@@ -90,6 +92,11 @@ export default function VolatilityTable({ interval = "1h" }) {
     columns,
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: getSortedRowModel(),
+    // Disable client-side sorting since we're using server-side sorting
+    manualSorting: true,
+    state: {
+      // No client-side sort info needed as we're using API sorting
+    },
   });
 
   if (loading) return <div className="p-4">Loading volatility data...</div>;
